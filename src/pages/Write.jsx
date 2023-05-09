@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useState } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -17,19 +17,11 @@ export const Write = () => {
   const [file, setFile] = useState(null);
   const [imgUrl, setImgUrl] = useState("");
   const [cat, setCat] = useState(state?.cat || '');
+  const [buttonClicked, setButtonClicked] = useState(false);
 
 
 
-  const upload =  async ()=> {
-    try {
-      const formData = new FormData()
-      formData.append("file",file)
-      const res = await axios.post("http://localhost:8800/upload",formData)
-      console.log(res.data)
-    } catch (error) {
-      console.log(error)
-    }
-  }
+
 
   const uploadImage = async () => {
     if(file == null) return;
@@ -41,55 +33,60 @@ export const Write = () => {
       alert("Image uploaded");
       // Store the URL in a variable
       setImgUrl(url)
-      const imageUrl = url;
-      console.log(imageUrl);
+        //console.log(imgUrl)
+      
     } catch (error) {
       console.log(error);
     }
-    
-    
-    
-     /* uploadBytes(imageRef, file).then( ()=> {
-       getDownloadURL(imageRef).then((url) => {
-        alert("Image uploaded");
-        // Store the URL in a variable
-        setImgUrl(url)
-        const imageUrl = url;
-        console.log(imageUrl);
-      }).catch((error) => {
-        console.log(error);
-      });
-    }) */
   }
+  useEffect(() => {
+
+    if (buttonClicked && imgUrl !== "") {
+      console.log("url =" +imgUrl); 
+      handleClick();
+      
+    }
+          
+  }, [imgUrl,buttonClicked]);
+    
+    
+
+
 
   const handleClick = async e => {
-    e.preventDefault()
-  
+    
+    
     try {
-      const imgUrl = await uploadImage()
-  
+      
       if (state) {
         await axios.put(`http://localhost:8800/api/posts/${state.id}`, {
           title,
           desc: value,
           cat,
-          img: file ? imgUrl : "",
+          img: imgUrl,
         }, { withCredentials: true })
       } else {
         await axios.post(`http://localhost:8800/api/posts/`, {
           title,
           desc: value,
           cat,
-          img: imgUrl ? imgUrl : "",
+          img: imgUrl,
           date: moment(Date.now()).format("YYYY-MM-DD HH:mm:ss")
         }, { withCredentials: true })
       }
   
-      console.log("done" + imgUrl)
+      
     } catch (error) {
       console.log(error)
     }
+
   }
+
+  const handlebutton = () => {
+    setButtonClicked(true);
+  };
+
+
 
   return (
     <div>
@@ -114,7 +111,7 @@ export const Write = () => {
               <input type='file' className='bg-white text-sm' onChange={e=>setFile(e.target.files[0])}></input>
               <div className='flex justify-between'>
                 <button className='hover:bg-btnGreen duration-300 ease-in-out px-1.5 py-0.5 border  border-btnGreen bg-white text-btnGreen hover:text-white'>Save as a Draft</button>
-                <button className='bg-btnGreen hover:bg-white border hover:border-btnGreen hover:text-btnGreen  duration-200 ease-in-out px-1.5 py-0.5 border-1 font-semibold  text-white' onClick={handleClick}>Publish</button>
+                <button className='bg-btnGreen hover:bg-white border hover:border-btnGreen hover:text-btnGreen  duration-200 ease-in-out px-1.5 py-0.5 border-1 font-semibold  text-white' onClick={ ()=> { uploadImage(); handlebutton();}}>Publish</button>
               </div>
             </div>
 
